@@ -49,25 +49,33 @@ Center the predictors, because they can reduce collinatarly between the slopes, 
 ```{r}
 dat$scCenter = round(scale(dat$sc, center =TRUE),2)
 dat$cbmCenter = round(scale(dat$cbm, center= TRUE),2)
+dat= as.data.frame(dat)
 head(dat)
 ```
 To get the amount of variance in the dependent variable associated with the 
 ```{r}
 library(nlme)
-model1 = lme(cbmCenter ~ fixed = scCenter, random = 1 | school, data = dat)
+model1 = lme(fixed = cbmCenter ~ scCenter, random = ~1 | school, data = dat)
 summary(model1)
-
+1.0744 / (1.0744+0.0220)
 ```
+Standrdization residuals = are the residuals scaled by the their standard deviation.
+Random effects = These are the average values for the standard deviation for the intercept (i.e. the average amount of deviation we see from the intercept) this is (u1j) and the level one residual (eij).  The fixed effect are interpreted that same single level regression.
+
+Corraltion (inter): The correlation between the fixed intercept and slope.  If the value was above zero, then we could say that as the intercept (i.e. intial values) increases so does the slope.  So a person who starts higher will increases as their score increases.
+
+
 Using REML, because it accounts for the included parameters correctly the standard errors (i.e. making them larger to account for the less degrees of freedom). 
 
-Scaled residuals = are the residuals scaled by the their standard deviation.
-Random effects = These are the average values for the 
+AIC, BIC, and logLik are all model comparison statistics.
 
-P-values are difficult with multilevel modeling and the lme4 creators suggest using simulation models to 
-```{r}
-library(coda)
-library(languageR)
-library(lmerTest)
-model1P = pvals.fnc(model1, nsim = 10000, withMCMC = TRUE)
-```
+The interclass correlation (ICC) = This is the amount of variation in the dependent variable that is accounted for by the variation among the groups.  It is the intercept (i.e. the variance among the clusters) and the residual (the variance among the indiviudals)
+
+$${\rho_{1} = {\tau^2 / (\tau^2 +\sigma^2)} }$$
+When we plug in the values, we see that 98% of the variation in the dependent variable is associated with differences, between groups.  
+$${.98 = {1.0744 / (1.0744 +0.0220)} }$$
+
+
+
+
 
