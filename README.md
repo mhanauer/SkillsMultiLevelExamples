@@ -28,13 +28,15 @@ gamma00 is the average or mean like score across the schools.  The indexes indic
 
 u0j is the random deviation from the intercept or initial value for each school.  This is a level two error term, which is why it only has the subscript j instead of i and j.  It has a j, because j represents all of the 200 schools (i.e. from 1 to j schools).  For example the unique deviation from the intercept for school one would be u01.  
 
-gamma10 is the average regression coefficient for the change associated with sex variable (sexij).  It is the average change we would see given a one unit change in the independent variable (in this case identifying as a female).  The first 1 index means that it is the first slope coefficient in level one and the second 0 means that it is the average slope coefficient (i.e. no effect of any level two variables), because in this model the slope is not varying by schools. 
+Beta10 is the average regression coefficient for the change associated with sex variable (sexij).  It is the average change we would see given a one unit change in the independent variable (in this case identifying as a female).  The first 1 index means that it is the first slope coefficient in level one and the second 0 means that it is the average slope coefficient (i.e. no effect of any level two variables), because in this model the slope is not varying by schools. 
 
 eij is the individual level one error term for each individual in each school. 
-$$ Level~1:~~~{y_{ij} = \beta_{0j} + \beta_{1j}(sex_{ij}) + e_{ij}}~~~ (1.1)$$
+$$ Level~1:~~~{y_{ij} = \beta_{0j} + \beta_{10}(sex_{ij}) + e_{ij}}~~~ (1.1)$$
+
 $$ Level~2~Intercept:~~~{\beta_{0j} = \gamma_{00} + u_{0j}} ~~~ (1.2)$$
 
-$$Mixed~model: ~~~{y_{ij} = \gamma_{00} + \gamma_{10}(sex_{ij}) + u_{0j} + e_{ij}} ~~~(1.3)$$
+$$Mixed~model: ~~~{y_{ij} = \gamma_{00} + \beta_{10}(sex_{ij}) + u_{0j} + e_{ij}} ~~~(1.3)$$
+
 Here is the r-code for the multilevel model described in equation 1 using the nlme package.  There is the fixed part, which will have the average intercept and the parameter estimate for sex across the schools.  To model the random intercepts, we use the 1 to signify that this is a random intercepts model where we want an individual intercept for each school.   
 ```{r, message=FALSE, warning=FALSE}
 library(nlme)
@@ -58,10 +60,12 @@ Standardized residuals: These are the residuals scaled by the standard deviation
 
 Now we can estimate the random slope model.   The random slope model adds one unique component which is u1j.  This is the random level two error for the slope allowing the slope to differ for each school for the covariate female.  It is indexed with j, because it can vary for each school.  It is multiplied by the covariate value of sex, because it is a slope therefore we need to multiply it by the covariate for which it is measuring the slope.
 $$ Level~1:~~~{y_{ij} = \beta_{0j} + \beta_{1j}(sex_{ij}) + e_{ij}}~~~ (3.1)$$
+
 $$ Level~2~Intercept:~~~{\beta_{0j} = \gamma_{00} + u_{0j}} ~~~ (3.2)$$
 
 $$ Level~2~Slope:~~~{\beta_{1j} = \gamma_{10} + u_{1j}} ~~~ (3.2)$$
 $$ Mixed~model:~~~{y_{ij} = \gamma_{00} + \gamma_{10}(sex_{ij}) +u_{0j} + u_{1j}(sex_{ij}) + e_{ij}}~~~ 3.3$$
+
 For this model, in nlme, instead of using one, we now use the term that we want to have a random slope which is sex.
 ```{r}
 model2 = lme(fixed = like ~ sex, random = ~ sex | school, data = dat)
@@ -70,15 +74,11 @@ sumModel2 = summary(model2); sumModel2
 The only new parameter provided is the stdDev for the sex variable, which is the standard deviation in the slope coefficients for sex for each school. 
 
 For the next model let us revert back to the random intercepts only model found in equations 1.  Now we want to estimate the effects of a level two variable school funding.  This parameter estimate is located in the level two intercept section, because in this model, we are assuming that school funding does not affect the level one slope coefficient, sex; however, we are assuming it does affect the mean (i.e. intercept) for like for each school.  One new part of this equation is  gamma01, which is the average slope coefficient for the level two school funding variable.  The second new part is found in the mixed model and it is the covariate school funding (sf), which is multiplied by gamma01, which is its slope coefficient. 
-     
-
-$$ Level~1:~~~{y_{ij} = \beta_{0j} + \beta_{1j}(sex_{ij}) + e_{ij}}~~~ (4.1)$$
-
-
+$$ Level~1:~~~{y_{ij} = \beta_{0j} + \beta_{10}(sex_{ij}) + e_{ij}}~~~ (4.1)$$
 $$ Level~2~Intercept:~~~{\beta_{0j} = \gamma_{00} + \gamma_{01}(sf_{j}) + u_{0j}} ~~~ (4.2)$$
 
 
-$$Mixed~model: ~~~{y_{ij} = \gamma_{00} + \gamma_{10}(sex_{ij}) +\gamma_{01}(sf_{j}) + u_{0j} + e_{ij}} ~~~(4.3)$$
+$$Mixed~model: ~~~{y_{ij} = \gamma_{00} + \beta_{10}(sex_{ij}) +\gamma_{01}(sf_{j}) + u_{0j} + e_{ij}} ~~~(4.3)$$
 Modeling a level two covariate with random intercepts is easy in nlme.  We just include the level two covariate in the model and nlme does the rest.  The new variable is the school funding (sf) variable which is centered at 0 and has a standard deviation of 20.
 ```{r}
 model3 = lme(fixed = like ~ sex + sf, random = ~ sex | school, data = dat)
@@ -87,9 +87,13 @@ sumModel3 = summary(model3); sumModel3
 
 Let us slightly change the data set so that we can create a model that makes sense for a random slopes model with the level two school funding variable.  Let us change the covariate sex to intervention (interven).  Now we can extend the model in equation 3 to include a random slopes component where school funding influences the slope of the coefficient for the intervention.  Below is the new set of equations:
 $$ Level~1:~~~{y_{ij} = \beta_{0j} + \beta_{1j}(interven_{ij}) + e_{ij}}~~~ (5.1)$$
+
 $$ Level~2~Intercept:~~~{\beta_{0j} = \gamma_{00} + \gamma_{01} + u_{0j}} ~~~ (5.2)$$
+
 $$ Level~2~Slope:~~~{\beta_{1j} = \gamma_{10} +\gamma_{11}(sf_{j}) + u_{1j}} ~~~ (5.3)$$
+
 $$Mixed~model: ~~~{y_{ij} = \gamma_{00} + \ + \gamma_{10}(interven_{ij}) +\gamma_{01}(sf_{j}) + \gamma_{11}(sf_{j})(interven_{ij}) + u_{0j} +u_{1j}(interven_{ij}) + e_{ij}} ~~~(5.4)$$
+
 The only new part is gamma11, which is the slope coefficient for the level two variable school funding and its interaction with intervention and is interpreted as a standard interaction regression coefficient. 
 
 Now we have the full mixed model with the level two covariate school funding interaction effect with the intervention covariate included in the fixed effects part of the model.  It is still relatively easy to implement this model in nlme and just add the interaction effect between intervention and school funding.
